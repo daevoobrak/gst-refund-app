@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GST Refund Working Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 40px 44px;
+      max-width: 560px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      color: #1a3a5c;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: #6b7e93;
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    .field-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #344156;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 20px;
+      margin-left: 6px;
+      vertical-align: middle;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .badge-xlsx { background: #e8f5e9; color: #2e7d32; }
+    .badge-pdf  { background: #fce4ec; color: #c62828; }
+
+    .drop-zone {
+      border: 2px dashed #b0c4d8;
+      border-radius: 8px;
+      padding: 18px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      background: #fafdff;
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #1976d2;
+      background: #e3f2fd;
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .drop-zone .dz-icon { font-size: 1.8rem; }
+    .drop-zone .dz-text { font-size: 0.84rem; color: #546e7a; margin-top: 4px; }
+    .drop-zone .dz-filename {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #1565c0;
+      word-break: break-all;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: #1565c0;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 28px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #0d47a1; }
+    .btn:disabled { background: #90a4ae; cursor: not-allowed; }
+
+    #status {
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+    }
+    #status.info    { background: #e3f2fd; color: #1565c0; display: block; }
+    #status.success { background: #e8f5e9; color: #2e7d32; display: block; }
+    #status.error   { background: #fce4ec; color: #b71c1c; display: block; }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #fff;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🧾 GST Refund Working Generator</h1>
+    <p class="subtitle">Upload three GST return files to generate the Refund Working Excel (Export WOP).</p>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+
+      <div class="field-group">
+        <label>GSTR-2B File <span class="badge badge-xlsx">XLSX</span></label>
+        <div class="drop-zone" id="dz-gstr2b">
+          <input type="file" name="gstr2b" id="gstr2b" accept=".xlsx,.xls" required />
+          <div class="dz-icon">📊</div>
+          <div class="dz-text">Click or drag &amp; drop<br><small>File name starts with <b>012025…</b></small></div>
+          <div class="dz-filename" id="fn-gstr2b"></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>GSTR-1 PDF <span class="badge badge-pdf">PDF</span></label>
+        <div class="drop-zone" id="dz-gstr1">
+          <input type="file" name="gstr1" id="gstr1" accept=".pdf" required />
+          <div class="dz-icon">📄</div>
+          <div class="dz-text">Click or drag &amp; drop<br><small>File name starts with <b>GSTR1…</b></small></div>
+          <div class="dz-filename" id="fn-gstr1"></div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>GSTR-3B PDF <span class="badge badge-pdf">PDF</span></label>
+        <div class="drop-zone" id="dz-gstr3b">
+          <input type="file" name="gstr3b" id="gstr3b" accept=".pdf" required />
+          <div class="dz-icon">📄</div>
+          <div class="dz-text">Click or drag &amp; drop<br><small>File name starts with <b>GSTR3B…</b></small></div>
+          <div class="dz-filename" id="fn-gstr3b"></div>
+        </div>
+      </div>
+
+      <button class="btn" type="submit" id="submitBtn">Generate Refund Working</button>
+    </form>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    // Show file name on selection
+    ['gstr2b','gstr1','gstr3b'].forEach(id => {
+      document.getElementById(id).addEventListener('change', function() {
+        document.getElementById('fn-' + id).textContent =
+          this.files[0] ? '✓ ' + this.files[0].name : '';
+      });
+    });
+
+    // Drag-over styling
+    document.querySelectorAll('.drop-zone').forEach(dz => {
+      dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+      dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+      dz.addEventListener('drop', () => dz.classList.remove('dragover'));
+    });
+
+    const form   = document.getElementById('uploadForm');
+    const btn    = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Processing…';
+      status.className = 'info';
+      status.textContent = 'Parsing files and generating Excel…';
+
+      try {
+        const fd = new FormData(form);
+        const resp = await fetch('/process', { method: 'POST', body: fd });
+
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const cd   = resp.headers.get('Content-Disposition') || '';
+          const fnMatch = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+          const fname = fnMatch ? fnMatch[1].replace(/['"]/g, '') : 'Refund_Working.xlsx';
+          const url   = URL.createObjectURL(blob);
+          const a     = document.createElement('a');
+          a.href = url; a.download = fname; a.click();
+          URL.revokeObjectURL(url);
+          status.className = 'success';
+          status.textContent = '✅ Download started: ' + fname;
+        } else {
+          const data = await resp.json();
+          status.className = 'error';
+          status.textContent = '❌ Error: ' + (data.error || 'Unknown error');
+          if (data.trace) console.error(data.trace);
+        }
+      } catch(err) {
+        status.className = 'error';
+        status.textContent = '❌ Network error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Generate Refund Working';
+      }
+    });
+  </script>
+</body>
+</html>
