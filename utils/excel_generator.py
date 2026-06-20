@@ -495,145 +495,121 @@ def _build_main_calc(ws, g3b, g1, g2b, period_label, net_itc_total, zero_rated, 
 # ═══════════════════════════════════════════════════════════════════════════
 # SHEET 3 – Turnover Sheet
 # ═══════════════════════════════════════════════════════════════════════════
-def _build_turnover(ws, g3b, g1, period_label):
+def _build_turnover(ws, periods):
+    """Turnover Sheet – one data row per period."""
     ws.title = "Turnover Sheet"
     ws.freeze_panes = 'B7'
 
-    # Column widths
     ws.column_dimensions['A'].width = 10
     for col in range(2, 35):
         ws.column_dimensions[get_column_letter(col)].width = 14
 
-    # Row 1 – Period header
+    first_label = periods[0]['label'] if periods else ''
+    last_label  = periods[-1]['label'] if periods else ''
+
     ws.cell(row=1, column=2, value="From").font = _font(bold=True)
     ws.cell(row=1, column=3, value="To").font = _font(bold=True)
     ws.cell(row=2, column=1, value="Tax period for Refund Claim").font = _font(bold=True)
-    ws.cell(row=2, column=2, value=period_label)
-    ws.cell(row=2, column=3, value=period_label)
+    ws.cell(row=2, column=2, value=first_label)
+    ws.cell(row=2, column=3, value=last_label)
 
-    # Row 4 – Section headers
     ws.merge_cells('A4:E4')
     c = ws.cell(row=4, column=1, value="Turnover as per GSTR-3B")
-    c.font = _font(bold=True, color=WHITE)
-    c.fill = _fill(DARK_BLUE)
+    c.font = _font(bold=True, color=WHITE); c.fill = _fill(DARK_BLUE)
     c.alignment = _align(h="center")
 
     ws.merge_cells('F4:AD4')
     c = ws.cell(row=4, column=6, value="Turnover as per GSTR-1")
-    c.font = _font(bold=True, color=WHITE)
-    c.fill = _fill(MED_BLUE)
+    c.font = _font(bold=True, color=WHITE); c.fill = _fill(MED_BLUE)
     c.alignment = _align(h="center")
 
-    # Row 5 – Sub-headers
-    col5 = [
-        (1, "Period"), (2, "Domestic Sales"), (3, "Zero rated"), (4, "(nil rated, exempted)"),
-    ]
-    for col, hdr in col5:
+    # Row 5 – Section sub-headers
+    for col, hdr in [(1,"Period"),(2,"Domestic Sales"),(3,"Zero rated"),(4,"(nil rated, exempted)")]:
         _h(ws, 5, col, hdr, bg=LIGHT_BLUE, wrap=True)
-
-    gstr1_sub = [
-        (6, "Period"), (7, "DOMESTIC SALES"), (13, ""), (14, ""), (15, ""), (16, ""), (17, ""),
-        (18, "DOMESTIC TOTAL"), (19, "ZERO RATED SUPPLIES"),
-        (25, ""), (26, ""),
-        (30, "TOTAL OF ZERO RATED SUPPLIES"),
-    ]
-    for col, hdr in gstr1_sub:
-        _h(ws, 5, col, hdr, bg=LIGHT_GREEN if col >= 6 else LIGHT_BLUE, wrap=True)
+    for col, hdr in [(6,"Period"),(7,"DOMESTIC SALES"),(18,"DOMESTIC TOTAL"),
+                     (19,"ZERO RATED SUPPLIES"),(30,"TOTAL ZERO RATED")]:
+        _h(ws, 5, col, hdr, bg=LIGHT_GREEN, wrap=True)
 
     # Row 6 – Detailed sub-headers
-    gstr3b_r6 = [(2, "3.1(a)"), (3, "3.1 (b)"), (4, "3.1 (c)")]
-    for col, hdr in gstr3b_r6:
+    for col, hdr in [(2,"3.1(a)"),(3,"3.1(b)"),(4,"3.1(c)")]:
         _h(ws, 6, col, hdr, bg=LIGHT_BLUE, wrap=True)
-
     gstr1_r6 = [
-        (7, "B2B (4A)"), (8, "B2CL (5)"), (9, "B2CS (7)"),
-        (10, "CDNR (9B)\ni.r.o. (4A)"), (11, "CDNUR (9B)\ni.r.o. B2CL"),
-        (12, "AMENDMENTS (9A)"), (13, "ADVANCE (11A)"), (14, "ADV ADJS (11B)"),
-        (15, "NIL rated"), (16, "Exempted"), (17, "Non-GST"),
-        (18, "Total (Domestic)"),
-        (19, "EXP WOP (6A)"), (20, "EXP WP (6A)"),
-        (21, "SEZ WOP (6B)"), (22, "SEZ WP (6B)"),
-        (23, "Deemed Export (6C)"),
-        (24, "CDNUR EXP WOP\n(9B)"), (25, "CDNUR EXP WP\n(9B)"),
-        (26, "CDNR SEZ WOP"), (27, "CDNR Deemed Exp"),
-        (28, "ZRS Turnover\n(EXP WOP)"), (29, "ZRS Turnover\n(EXP WP)"),
-        (30, "Zero rated\n(Export)"), (31, "Zero rated\n(SEZ)"), (32, "Zero rated\n(Deemed)"),
+        (7,"B2B (4A)"),(8,"B2CL (5)"),(9,"B2CS (7)"),
+        (10,"CDNR (9B)"),(11,"CDNUR (9B)"),(12,"AMENDMENTS"),(13,"ADVANCE"),(14,"ADV ADJ"),
+        (15,"NIL rated"),(16,"Exempted"),(17,"Non-GST"),(18,"Total (Dom)"),
+        (19,"EXP WOP (6A)"),(20,"EXP WP (6A)"),(21,"SEZ WOP (6B)"),(22,"SEZ WP (6B)"),
+        (23,"Deemed Exp (6C)"),(24,"CDNUR EXP WOP"),(25,"CDNUR EXP WP"),
+        (26,"CDNR SEZ WOP"),(27,"CDNR Deemed"),
+        (28,"ZRS (EXP WOP)"),(29,"ZRS (EXP WP)"),
+        (30,"Zero rated\n(Export)"),(31,"Zero rated\n(SEZ)"),(32,"Zero rated\n(Deemed)"),
     ]
     for col, hdr in gstr1_r6:
         _h(ws, 6, col, hdr, bg=LIGHT_GREEN, wrap=True, h_align="center")
     ws.row_dimensions[6].height = 42
 
-    # ── Data row ──────────────────────────────────────────────────────────
+    # ── One data row per period ───────────────────────────────────────────
     row = 7
-    domestic_3b = _fmt_number(g3b.get('outward_taxable', {}).get('taxable', 0))
-    zero_3b     = _fmt_number(g3b.get('outward_zero_rated', {}).get('taxable', 0))
-    nil_3b      = _fmt_number(g3b.get('outward_nil_exempted', {}).get('taxable', 0))
+    totals = {c: 0.0 for c in range(2, 33)}
 
-    b2b   = _fmt_number(g1.get('b2b_taxable', 0))
-    b2cl  = _fmt_number(g1.get('b2cl_taxable', 0))
-    b2cs  = _fmt_number(g1.get('b2cs_value', 0))
-    cdnr  = _fmt_number(-g1.get('cdnr_value', 0))   # CDN reduces
-    nil1  = _fmt_number(g1.get('nil_rated', 0))
-    exm1  = _fmt_number(g1.get('exempted', 0))
-    ngst1 = _fmt_number(g1.get('non_gst', 0))
-    dom_total = _fmt_number(b2b + b2cl + b2cs + cdnr)
+    for p in periods:
+        g3b, g1, lbl = p['g3b'], p['g1'], p['label']
 
-    exp_wop = _fmt_number(g1.get('exp_wop_value', 0))
-    exp_wp  = _fmt_number(g1.get('exp_wp_value', 0))
-    sez_wop = _fmt_number(g1.get('sez_wop_value', 0))
-    sez_wp  = _fmt_number(g1.get('sez_wp_value', 0))
-    deemed  = _fmt_number(g1.get('deemed_export_value', 0))
-    zrs_exp_wop = exp_wop   # ZRS = EXP WOP value
-    zrs_total   = _fmt_number(exp_wop + exp_wp + sez_wop + sez_wp + deemed)
+        domestic_3b = _fmt_number(g3b.get('outward_taxable', {}).get('taxable', 0))
+        zero_3b     = _fmt_number(g3b.get('outward_zero_rated', {}).get('taxable', 0))
+        nil_3b      = _fmt_number(g3b.get('outward_nil_exempted', {}).get('taxable', 0))
+        b2b   = _fmt_number(g1.get('b2b_taxable', 0))
+        b2cl  = _fmt_number(g1.get('b2cl_taxable', 0))
+        b2cs  = _fmt_number(g1.get('b2cs_value', 0))
+        cdnr  = _fmt_number(-g1.get('cdnr_value', 0))
+        nil1  = _fmt_number(g1.get('nil_rated', 0))
+        exm1  = _fmt_number(g1.get('exempted', 0))
+        ngst1 = _fmt_number(g1.get('non_gst', 0))
+        dom_total = _fmt_number(b2b + b2cl + b2cs + cdnr)
+        exp_wop = _fmt_number(g1.get('exp_wop_value', 0))
+        exp_wp  = _fmt_number(g1.get('exp_wp_value', 0))
+        sez_wop = _fmt_number(g1.get('sez_wop_value', 0))
+        sez_wp  = _fmt_number(g1.get('sez_wp_value', 0))
+        deemed  = _fmt_number(g1.get('deemed_export_value', 0))
+        zrs_total = _fmt_number(exp_wop + exp_wp + sez_wop + sez_wp + deemed)
 
-    data_3b = {1: period_label, 2: domestic_3b, 3: zero_3b, 4: nil_3b}
-    data_g1 = {
-        7: b2b, 8: b2cl, 9: b2cs, 10: cdnr, 11: 0.0, 12: 0.0, 13: 0.0, 14: 0.0,
-        15: nil1, 16: exm1, 17: ngst1, 18: dom_total,
-        19: exp_wop, 20: exp_wp, 21: sez_wop, 22: sez_wp, 23: deemed,
-        24: 0.0, 25: 0.0, 26: 0.0, 27: 0.0,
-        28: zrs_exp_wop, 29: exp_wp,
-        30: zrs_total, 31: _fmt_number(sez_wop + sez_wp), 32: deemed,
-    }
-    for col, val in {**data_3b, **data_g1}.items():
-        c = ws.cell(row=row, column=col, value=val)
-        c.border = _thin_border()
-        c.alignment = _align(h="right" if isinstance(val, float) else "center")
-        if isinstance(val, float):
-            c.number_format = "#,##0.00"
+        row_data = {
+            1: lbl,
+            2: domestic_3b, 3: zero_3b, 4: nil_3b,
+            7: b2b, 8: b2cl, 9: b2cs, 10: cdnr, 11: 0.0, 12: 0.0, 13: 0.0, 14: 0.0,
+            15: nil1, 16: exm1, 17: ngst1, 18: dom_total,
+            19: exp_wop, 20: exp_wp, 21: sez_wop, 22: sez_wp, 23: deemed,
+            24: 0.0, 25: 0.0, 26: 0.0, 27: 0.0,
+            28: exp_wop, 29: exp_wp,
+            30: zrs_total, 31: _fmt_number(sez_wop + sez_wp), 32: deemed,
+        }
+        for col, val in row_data.items():
+            c = ws.cell(row=row, column=col, value=val)
+            c.border = _thin_border()
+            c.alignment = _align(h="right" if isinstance(val, float) else "center")
+            if isinstance(val, float):
+                c.number_format = "#,##0.00"
+            if col in totals and isinstance(val, float):
+                totals[col] = round(totals[col] + val, 2)
+        row += 1
 
-    # Total row
-    row += 1
+    # ── Total row ─────────────────────────────────────────────────────────
     ws.cell(row=row, column=1, value="Total").font = _font(bold=True)
     ws.cell(row=row, column=1).fill = _fill(LIGHT_GREY)
     ws.cell(row=row, column=1).border = _thin_border()
-    total_map = {
-        2: domestic_3b, 3: zero_3b, 4: nil_3b,
-        7: b2b, 8: b2cl, 9: b2cs, 10: cdnr, 15: nil1, 16: exm1, 17: ngst1,
-        18: dom_total, 19: exp_wop, 20: exp_wp, 21: sez_wop, 22: sez_wp,
-        23: deemed, 28: zrs_exp_wop, 29: exp_wp,
-        30: zrs_total, 31: _fmt_number(sez_wop + sez_wp), 32: deemed,
-    }
-    for col, val in total_map.items():
+    for col in range(2, 33):
+        val = totals.get(col, 0.0)
         c = ws.cell(row=row, column=col, value=val)
-        c.font = _font(bold=True)
-        c.fill = _fill(LIGHT_GREY)
+        c.font = _font(bold=True); c.fill = _fill(LIGHT_GREY)
         c.border = _thin_border()
         c.alignment = _align(h="right")
         c.number_format = "#,##0.00"
-
-    # Summary labels below
-    row += 2
-    for label, val in [("DOMESTIC GSTR-3B", domestic_3b), ("Export GSTR-3B", zero_3b)]:
-        ws.cell(row=row, column=1, value=label).font = _font(bold=True)
-        ws.cell(row=row, column=2, value=val).number_format = "#,##0.00"
-        row += 1
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 # SHEET 4 – ITC Sheet
 # ═══════════════════════════════════════════════════════════════════════════
-def _build_itc(ws, g3b, g2b, period_label):
+def _build_itc(ws, periods):
+    """ITC Sheet – GSTR-3B section and GSTR-2B section, one row per period each."""
     ws.title = "ITC Sheet"
     ws.freeze_panes = 'B7'
 
@@ -641,305 +617,317 @@ def _build_itc(ws, g3b, g2b, period_label):
     for col in range(2, 38):
         ws.column_dimensions[get_column_letter(col)].width = 11
 
-    # Row 1-2 header
+    first_label = periods[0]['label'] if periods else ''
+    last_label  = periods[-1]['label'] if periods else ''
+
     ws.cell(row=1, column=2, value="From").font = _font(bold=True)
     ws.cell(row=1, column=3, value="To").font = _font(bold=True)
     ws.cell(row=2, column=1, value="Tax period for Refund Claim").font = _font(bold=True)
-    ws.cell(row=2, column=2, value=period_label)
-    ws.cell(row=2, column=3, value=period_label)
+    ws.cell(row=2, column=2, value=first_label)
+    ws.cell(row=2, column=3, value=last_label)
 
-    # Row 4 – Section title
     ws.merge_cells('A4:AK4')
     c = ws.cell(row=4, column=1, value="ITC availed as per GSTR-3B")
-    c.font = _font(bold=True, color=WHITE)
-    c.fill = _fill(DARK_BLUE)
+    c.font = _font(bold=True, color=WHITE); c.fill = _fill(DARK_BLUE)
     c.alignment = _align(h="center")
 
-    # Row 5 – Section group headers
+    # Section group headers (row 5)
     GSTR3B_COLS = [
-        (2,  "4. (A) (1)\nImport of Goods",                1, 'B'),
-        (3,  "4. (A) (2)\nImport of Services",              1, 'C'),
-        (4,  "4. (A) (3)\nRCM (other than 1 & 2)",          4, 'D'),
-        (8,  "4. (A) (4)\nInward supplies from ISD",         4, 'H'),
-        (12, "4. (A) (5)\nAll other ITC",                   4, 'L'),
-        (16, "4. (A) NET TOTAL",                             4, 'P'),
-        (20, "4. (B)(1) ITC Reversed\n(Rules 38,42,43)",    4, 'T'),
-        (24, "4. (B)(2) ITC Reversed\nOthers",              4, 'X'),
-        (28, "4. (C) Net ITC Available",                    4, 'AB'),
-        (32, "ITC RECLAIMED (4D)",                          4, 'AF'),
+        (2,  "4.(A)(1) Import Goods",        1),
+        (3,  "4.(A)(2) Import Services",     1),
+        (4,  "4.(A)(3) RCM",                  4),
+        (8,  "4.(A)(4) ISD",                  4),
+        (12, "4.(A)(5) All other ITC",        4),
+        (16, "4.(A) NET TOTAL",               4),
+        (20, "4.(B)(1) Reversed\n(38,42,43)", 4),
+        (24, "4.(B)(2) Reversed\nOthers",     4),
+        (28, "4.(C) Net ITC",                 4),
+        (32, "ITC Reclaimed (4D)",            4),
     ]
-    for start_col, hdr, span, _ in GSTR3B_COLS:
+    for start_col, hdr, span in GSTR3B_COLS:
         if span > 1:
             ws.merge_cells(start_row=5, start_column=start_col,
                            end_row=5, end_column=start_col + span - 1)
         _h(ws, 5, start_col, hdr, bg=LIGHT_BLUE, wrap=True, h_align="center")
-        ws.row_dimensions[5].height = 40
+    ws.row_dimensions[5].height = 40
 
-    # Row 6 – IGST/CGST/SGST/CESS sub-headers
-    ws.cell(row=6, column=1, value='').border = _thin_border()
-    ws.cell(row=6, column=2, value='IGST').font = _font(bold=True)
-    ws.cell(row=6, column=2).border = _thin_border()
-    ws.cell(row=6, column=2).fill = _fill(LIGHT_BLUE)
-    ws.cell(row=6, column=3, value='IGST').font = _font(bold=True)
-    ws.cell(row=6, column=3).border = _thin_border()
-    ws.cell(row=6, column=3).fill = _fill(LIGHT_BLUE)
-
-    sub_labels = ['IGST', 'CGST', 'SGST', 'CESS']
-    for start_col, _, span, _ in GSTR3B_COLS:
-        if span == 4:
+    # Sub-labels row 6
+    sub_labels = ['IGST','CGST','SGST','CESS']
+    ws.cell(row=6, column=1).border = _thin_border()
+    for sc, _, span in GSTR3B_COLS:
+        if span == 1:
+            c = ws.cell(row=6, column=sc, value='IGST')
+            c.font = _font(bold=True); c.fill = _fill(LIGHT_BLUE)
+            c.border = _thin_border(); c.alignment = _align(h="center")
+        else:
             for i, lbl in enumerate(sub_labels):
-                c = ws.cell(row=6, column=start_col + i, value=lbl)
-                c.font = _font(bold=True)
-                c.fill = _fill(LIGHT_BLUE)
-                c.alignment = _align(h="center")
-                c.border = _thin_border()
+                c = ws.cell(row=6, column=sc+i, value=lbl)
+                c.font = _font(bold=True); c.fill = _fill(LIGHT_BLUE)
+                c.border = _thin_border(); c.alignment = _align(h="center")
 
-    # ── GSTR-3B Data row ──────────────────────────────────────────────────
+    # ── GSTR-3B data rows ─────────────────────────────────────────────────
     row = 7
-    g = g3b
-    def igst(d): return _fmt_number(d.get('igst', 0))
-    def cgst(d): return _fmt_number(d.get('cgst', 0))
-    def sgst(d): return _fmt_number(d.get('sgst', 0))
-    def cess(d): return _fmt_number(d.get('cess', 0))
+    g3b_totals = {col: 0.0 for col in range(2, 36)}
 
-    rcm    = g.get('itc_rcm', {})
-    isd    = g.get('itc_isd', {})
-    ao     = g.get('itc_all_other', {})
-    rev1   = g.get('itc_reversed_1', {})
-    rev2   = g.get('itc_reversed_2', {})
-    nitc   = g.get('net_itc', {})
-    reclm  = g.get('itc_reclaimed', {})
-    imp_g  = g.get('itc_import_goods', {})
-    imp_s  = g.get('itc_import_svc', {})
+    def _igst(d): return _fmt_number(d.get('igst', 0))
+    def _cgst(d): return _fmt_number(d.get('cgst', 0))
+    def _sgst(d): return _fmt_number(d.get('sgst', 0))
+    def _cess(d): return _fmt_number(d.get('cess', 0))
 
-    net_p_igst = _fmt_number(igst(imp_g) + igst(imp_s) + igst(rcm) + igst(isd) + igst(ao))
-    net_p_cgst = _fmt_number(cgst(rcm) + cgst(isd) + cgst(ao))
-    net_p_sgst = _fmt_number(sgst(rcm) + sgst(isd) + sgst(ao))
-    net_p_cess = _fmt_number(cess(rcm) + cess(isd) + cess(ao))
+    for p in periods:
+        g = p['g3b']
+        rcm   = g.get('itc_rcm', {});       isd   = g.get('itc_isd', {})
+        ao    = g.get('itc_all_other', {});  rev1  = g.get('itc_reversed_1', {})
+        rev2  = g.get('itc_reversed_2', {}); nitc  = g.get('net_itc', {})
+        reclm = g.get('itc_reclaimed', {});  imp_g = g.get('itc_import_goods', {})
+        imp_s = g.get('itc_import_svc', {})
 
-    col_vals = {
-        1: period_label,
-        2: igst(imp_g),
-        3: igst(imp_s),
-        4: igst(rcm), 5: cgst(rcm), 6: sgst(rcm), 7: cess(rcm),
-        8: igst(isd), 9: cgst(isd), 10: sgst(isd), 11: cess(isd),
-        12: igst(ao), 13: cgst(ao), 14: sgst(ao), 15: cess(ao),
-        16: net_p_igst, 17: net_p_cgst, 18: net_p_sgst, 19: net_p_cess,
-        20: igst(rev1), 21: cgst(rev1), 22: sgst(rev1), 23: cess(rev1),
-        24: igst(rev2), 25: cgst(rev2), 26: sgst(rev2), 27: cess(rev2),
-        28: igst(nitc), 29: cgst(nitc), 30: sgst(nitc), 31: cess(nitc),
-        32: igst(reclm), 33: cgst(reclm), 34: sgst(reclm), 35: cess(reclm),
-    }
-    for col, val in col_vals.items():
-        c = ws.cell(row=row, column=col, value=val)
-        c.border = _thin_border()
-        c.alignment = _align(h="right" if isinstance(val, float) else "center")
-        if isinstance(val, float):
-            c.number_format = "#,##0.00"
+        net_igst = _fmt_number(_igst(imp_g)+_igst(imp_s)+_igst(rcm)+_igst(isd)+_igst(ao))
+        net_cgst = _fmt_number(_cgst(rcm)+_cgst(isd)+_cgst(ao))
+        net_sgst = _fmt_number(_sgst(rcm)+_sgst(isd)+_sgst(ao))
+        net_cess = _fmt_number(_cess(rcm)+_cess(isd)+_cess(ao))
 
-    # Total row (GSTR-3B section)
-    row += 1  # skip some blank rows, then total
-    for i in range(2):
-        row2 = row + i
-        for col in range(1, 36):
-            ws.cell(row=row2, column=col).border = _thin_border()
+        row_data = {
+            1: p['label'],
+            2: _igst(imp_g), 3: _igst(imp_s),
+            4: _igst(rcm),  5: _cgst(rcm),  6: _sgst(rcm),  7: _cess(rcm),
+            8: _igst(isd),  9: _cgst(isd), 10: _sgst(isd), 11: _cess(isd),
+            12: _igst(ao), 13: _cgst(ao), 14: _sgst(ao), 15: _cess(ao),
+            16: net_igst,  17: net_cgst,  18: net_sgst,  19: net_cess,
+            20: _igst(rev1),21: _cgst(rev1),22: _sgst(rev1),23: _cess(rev1),
+            24: _igst(rev2),25: _cgst(rev2),26: _sgst(rev2),27: _cess(rev2),
+            28: _igst(nitc),29: _cgst(nitc),30: _sgst(nitc),31: _cess(nitc),
+            32: _igst(reclm),33: _cgst(reclm),34: _sgst(reclm),35: _cess(reclm),
+        }
+        for col, val in row_data.items():
+            c = ws.cell(row=row, column=col, value=val)
+            c.border = _thin_border()
+            c.alignment = _align(h="right" if isinstance(val, float) else "center")
+            if isinstance(val, float):
+                c.number_format = "#,##0.00"
+                if col in g3b_totals:
+                    g3b_totals[col] = round(g3b_totals[col] + val, 2)
+        row += 1
 
-    row += 2
+    # GSTR-3B total row
     ws.cell(row=row, column=1, value="Total").font = _font(bold=True)
     ws.cell(row=row, column=1).fill = _fill(LIGHT_GREY)
     ws.cell(row=row, column=1).border = _thin_border()
-    for col, val in col_vals.items():
-        if col == 1:
-            continue
+    for col, val in g3b_totals.items():
         c = ws.cell(row=row, column=col, value=val)
-        c.font = _font(bold=True)
-        c.fill = _fill(LIGHT_GREY)
-        c.border = _thin_border()
-        c.alignment = _align(h="right")
-        if isinstance(val, float):
-            c.number_format = "#,##0.00"
+        c.font = _font(bold=True); c.fill = _fill(LIGHT_GREY)
+        c.border = _thin_border(); c.alignment = _align(h="right")
+        c.number_format = "#,##0.00"
 
     # ── GSTR-2B Section ───────────────────────────────────────────────────
     row += 3
     ws.merge_cells(f'A{row}:AK{row}')
     c = ws.cell(row=row, column=1, value="ITC availed as per GSTR-2B")
-    c.font = _font(bold=True, color=WHITE)
-    c.fill = _fill(MED_BLUE)
+    c.font = _font(bold=True, color=WHITE); c.fill = _fill(MED_BLUE)
     c.alignment = _align(h="center")
 
     row += 1
-    # Sub-section headers for GSTR-2B
     G2B_COLS = [
-        (2,  "4. (A) (1)\nImport of Goods (IGST)", 1),
-        (3,  "4. (A) (2)\nImport Services\n(from GSTR-3B)", 1),
-        (8,  "4. (A) (4)\nISD",                   4),
-        (12, "4. (A) (5)\nAll other ITC",          4),
-        (16, "4. (A) NET TOTAL",                    4),
-        (24, "Debit & Credit Notes (B)",            4),
-        (28, "4. (C) Net ITC Available",            4),
+        (2,  "4.(A)(1) Import\n(IGST)",    1),
+        (3,  "4.(A)(2) Import\nSvc (3B)",  1),
+        (8,  "4.(A)(4) ISD",               4),
+        (12, "4.(A)(5) All other",         4),
+        (16, "4.(A) NET TOTAL",            4),
+        (24, "CDN Net (B)",                4),
+        (28, "4.(C) Net ITC",              4),
     ]
-    for start_col, hdr, span in G2B_COLS:
+    for sc, hdr, span in G2B_COLS:
         if span > 1:
-            ws.merge_cells(start_row=row, start_column=start_col,
-                           end_row=row, end_column=start_col + span - 1)
-        _h(ws, row, start_col, hdr, bg=LIGHT_GREEN, wrap=True, h_align="center")
-    ws.row_dimensions[row].height = 42
+            ws.merge_cells(start_row=row, start_column=sc,
+                           end_row=row, end_column=sc+span-1)
+        _h(ws, row, sc, hdr, bg=LIGHT_GREEN, wrap=True, h_align="center")
+    ws.row_dimensions[row].height = 40
 
     row += 1
-    ws.cell(row=row, column=2, value='IGST').fill = _fill(LIGHT_GREEN)
-    ws.cell(row=row, column=2).border = _thin_border()
-    ws.cell(row=row, column=2).font = _font(bold=True)
-    ws.cell(row=row, column=3, value='IGST').fill = _fill(LIGHT_GREEN)
-    ws.cell(row=row, column=3).border = _thin_border()
-    ws.cell(row=row, column=3).font = _font(bold=True)
-    for start_col, _, span in G2B_COLS:
-        if span == 4:
+    for sc, _, span in G2B_COLS:
+        if span == 1:
+            c = ws.cell(row=row, column=sc, value='IGST')
+            c.font = _font(bold=True); c.fill = _fill(LIGHT_GREEN)
+            c.border = _thin_border(); c.alignment = _align(h="center")
+        else:
             for i, lbl in enumerate(sub_labels):
-                c2 = ws.cell(row=row, column=start_col + i, value=lbl)
-                c2.font = _font(bold=True)
-                c2.fill = _fill(LIGHT_GREEN)
-                c2.alignment = _align(h="center")
-                c2.border = _thin_border()
+                c = ws.cell(row=row, column=sc+i, value=lbl)
+                c.font = _font(bold=True); c.fill = _fill(LIGHT_GREEN)
+                c.border = _thin_border(); c.alignment = _align(h="center")
 
-    # GSTR-2B data row
+    # GSTR-2B data rows
     row += 1
-    cdn_net_igst = _fmt_number(g2b.get('cdn_igst', 0))  # negative = credit note
-    cdn_net_cgst = _fmt_number(g2b.get('cdn_cgst', 0))
-    cdn_net_sgst = _fmt_number(g2b.get('cdn_sgst', 0))
-    cdn_net_cess = _fmt_number(g2b.get('cdn_cess', 0))
+    g2b_totals = {col: 0.0 for col in range(2, 32)}
 
-    g2b_4a5_igst = _fmt_number(g2b.get('4a5_igst', 0))
-    g2b_4a5_cgst = _fmt_number(g2b.get('4a5_cgst', 0))
-    g2b_4a5_sgst = _fmt_number(g2b.get('4a5_sgst', 0))
-    g2b_4a5_cess = _fmt_number(g2b.get('4a5_cess', 0))
+    for p in periods:
+        g2b = p['g2b']
+        imp  = _fmt_number(g2b.get('import_igst', 0))
+        i5   = _fmt_number(g2b.get('4a5_igst', 0))
+        c5   = _fmt_number(g2b.get('4a5_cgst', 0))
+        s5   = _fmt_number(g2b.get('4a5_sgst', 0))
+        ce5  = _fmt_number(g2b.get('4a5_cess', 0))
+        i4   = _fmt_number(g2b.get('4a4_igst', 0))
+        c4   = _fmt_number(g2b.get('4a4_cgst', 0))
+        s4   = _fmt_number(g2b.get('4a4_sgst', 0))
+        ce4  = _fmt_number(g2b.get('4a4_cess', 0))
+        ci   = _fmt_number(g2b.get('cdn_igst', 0))
+        cc   = _fmt_number(g2b.get('cdn_cgst', 0))
+        cs   = _fmt_number(g2b.get('cdn_sgst', 0))
+        cce  = _fmt_number(g2b.get('cdn_cess', 0))
+        ni   = _fmt_number(g2b.get('net_igst', 0))
+        nc   = _fmt_number(g2b.get('net_cgst', 0))
+        ns   = _fmt_number(g2b.get('net_sgst', 0))
+        nce  = _fmt_number(g2b.get('net_cess', 0))
+        nt_i = _fmt_number(imp + i4 + i5)
+        nt_c = _fmt_number(c4 + c5)
+        nt_s = _fmt_number(s4 + s5)
+        nt_e = _fmt_number(ce4 + ce5)
 
-    imp_igst = _fmt_number(g2b.get('import_igst', 0))
-    g2b_isd_igst = _fmt_number(g2b.get('4a4_igst', 0))
-    g2b_isd_cgst = _fmt_number(g2b.get('4a4_cgst', 0))
-    g2b_isd_sgst = _fmt_number(g2b.get('4a4_sgst', 0))
-    g2b_isd_cess = _fmt_number(g2b.get('4a4_cess', 0))
+        row_data = {
+            1: p['label'],
+            2: imp, 3: 0.0,
+            8: i4,  9: c4,  10: s4,  11: ce4,
+            12: i5, 13: c5, 14: s5,  15: ce5,
+            16: nt_i, 17: nt_c, 18: nt_s, 19: nt_e,
+            24: ci, 25: cc, 26: cs, 27: cce,
+            28: ni, 29: nc, 30: ns, 31: nce,
+        }
+        for col, val in row_data.items():
+            c = ws.cell(row=row, column=col, value=val)
+            c.border = _thin_border()
+            c.alignment = _align(h="right" if isinstance(val, float) else "center")
+            if isinstance(val, float):
+                c.number_format = "#,##0.00"
+                if col in g2b_totals:
+                    g2b_totals[col] = round(g2b_totals[col] + val, 2)
+        row += 1
 
-    net2b_igst = _fmt_number(g2b.get('net_igst', 0))
-    net2b_cgst = _fmt_number(g2b.get('net_cgst', 0))
-    net2b_sgst = _fmt_number(g2b.get('net_sgst', 0))
-    net2b_cess = _fmt_number(g2b.get('net_cess', 0))
-
-    net_total_igst = _fmt_number(imp_igst + g2b_isd_igst + g2b_4a5_igst)
-    net_total_cgst = _fmt_number(g2b_isd_cgst + g2b_4a5_cgst)
-    net_total_sgst = _fmt_number(g2b_isd_sgst + g2b_4a5_sgst)
-    net_total_cess = _fmt_number(g2b_isd_cess + g2b_4a5_cess)
-
-    g2b_col_vals = {
-        1: period_label,
-        2: imp_igst, 3: 0.0,
-        8: g2b_isd_igst, 9: g2b_isd_cgst, 10: g2b_isd_sgst, 11: g2b_isd_cess,
-        12: g2b_4a5_igst, 13: g2b_4a5_cgst, 14: g2b_4a5_sgst, 15: g2b_4a5_cess,
-        16: net_total_igst, 17: net_total_cgst, 18: net_total_sgst, 19: net_total_cess,
-        24: cdn_net_igst, 25: cdn_net_cgst, 26: cdn_net_sgst, 27: cdn_net_cess,
-        28: net2b_igst, 29: net2b_cgst, 30: net2b_sgst, 31: net2b_cess,
-    }
-    for col, val in g2b_col_vals.items():
-        c = ws.cell(row=row, column=col, value=val)
-        c.border = _thin_border()
-        c.alignment = _align(h="right" if isinstance(val, float) else "center")
-        if isinstance(val, float):
-            c.number_format = "#,##0.00"
-
-    # Total row (GSTR-2B)
-    row += 3
+    # GSTR-2B total row
     ws.cell(row=row, column=1, value="Total").font = _font(bold=True)
     ws.cell(row=row, column=1).fill = _fill(LIGHT_GREY)
     ws.cell(row=row, column=1).border = _thin_border()
-    for col, val in g2b_col_vals.items():
-        if col == 1:
-            continue
+    for col, val in g2b_totals.items():
         c = ws.cell(row=row, column=col, value=val)
-        c.font = _font(bold=True)
-        c.fill = _fill(LIGHT_GREY)
-        c.border = _thin_border()
-        c.alignment = _align(h="right")
-        if isinstance(val, float):
-            c.number_format = "#,##0.00"
+        c.font = _font(bold=True); c.fill = _fill(LIGHT_GREY)
+        c.border = _thin_border(); c.alignment = _align(h="right")
+        c.number_format = "#,##0.00"
 
-    # ── Annexure-B ────────────────────────────────────────────────────────
+    # ── Annexure-B (aggregate) ────────────────────────────────────────────
     row += 4
     ws.merge_cells(f'N{row}:R{row}')
-    c = ws.cell(row=row, column=14, value="ANNEXURE-B")
-    c.font = _font(bold=True, color=WHITE)
-    c.fill = _fill(DARK_BLUE)
+    c = ws.cell(row=row, column=14, value="ANNEXURE-B (Aggregate)")
+    c.font = _font(bold=True, color=WHITE); c.fill = _fill(DARK_BLUE)
     c.alignment = _align(h="center")
 
     row += 1
-    for col, hdr in enumerate(['', 'IGST', 'CGST', 'SGST', 'CESS', 'Total'], start=13):
+    for col, hdr in enumerate(['','IGST','CGST','SGST','CESS','Total'], start=13):
         _h(ws, row, col, hdr, bg=YELLOW_HDR)
 
-    # Annexure totals
-    annexb_rows = [
-        ("Total eligible",
-         _fmt_number(igst(nitc) + cgst(nitc) + sgst(nitc) + cess(nitc)),
-         _fmt_number(igst(nitc)), _fmt_number(cgst(nitc)), _fmt_number(sgst(nitc)), _fmt_number(cess(nitc))),
-        ("Not available", 0.0, 0.0, 0.0, 0.0, 0.0),
-        ("Net ITC for refund",
-         _fmt_number(igst(nitc) + cgst(nitc) + sgst(nitc) + cess(nitc)),
-         _fmt_number(igst(nitc)), _fmt_number(cgst(nitc)), _fmt_number(sgst(nitc)), _fmt_number(cess(nitc))),
-    ]
-    for label, total, igst_v, cgst_v, sgst_v, cess_v in annexb_rows:
+    tot_igst = g3b_totals.get(28, 0)
+    tot_cgst = g3b_totals.get(29, 0)
+    tot_sgst = g3b_totals.get(30, 0)
+    tot_cess = g3b_totals.get(31, 0)
+    tot_all  = round(tot_igst + tot_cgst + tot_sgst + tot_cess, 2)
+
+    for label, ig, cg, sg, ce, tot in [
+        ("Total eligible",    tot_igst, tot_cgst, tot_sgst, tot_cess, tot_all),
+        ("Not available",     0.0, 0.0, 0.0, 0.0, 0.0),
+        ("Net ITC for refund", tot_igst, tot_cgst, tot_sgst, tot_cess, tot_all),
+    ]:
         row += 1
-        ws.cell(row=row, column=13, value=label).font = _font(bold=("Net ITC" in label))
-        ws.cell(row=row, column=13).border = _thin_border()
-        for col, v in enumerate([igst_v, cgst_v, sgst_v, cess_v, total], start=14):
+        c = ws.cell(row=row, column=13, value=label)
+        c.font = _font(bold=("Net ITC" in label)); c.border = _thin_border()
+        for col, v in enumerate([ig, cg, sg, ce, tot], start=14):
             c = ws.cell(row=row, column=col, value=v)
-            c.alignment = _align(h="right")
-            c.border = _thin_border()
+            c.alignment = _align(h="right"); c.border = _thin_border()
             c.number_format = "#,##0.00"
 
 
 # ═══════════════════════════════════════════════════════════════════════════
 # MAIN ENTRY POINT
 # ═══════════════════════════════════════════════════════════════════════════
-def generate_refund_excel(g3b, g1, g2b):
+def generate_refund_excel(periods, gstin='', name=''):
     """
-    Generate the Refund Working Excel.
+    Generate the Refund Working Excel from a list of period dicts.
+    Each period dict: {'key','label','g3b','g1','g2b'}
     Returns bytes of the .xlsx file.
     """
-    # ── Derived values ────────────────────────────────────────────────────
-    period_str = g3b.get('period') or g2b.get('period') or 'Unknown'
-    year_str   = g3b.get('year')   or g2b.get('year')   or '2024-25'
-    period_label = _period_label(period_str, year_str)
+    if not periods:
+        raise ValueError("No periods provided")
 
-    # Net ITC total (IGST + CGST + SGST + CESS from GSTR-3B)
-    nitc = g3b.get('net_itc', {})
-    net_itc_total = _fmt_number(
-        nitc.get('igst', 0) + nitc.get('cgst', 0) + nitc.get('sgst', 0) + nitc.get('cess', 0))
+    # ── Aggregate totals across all periods ───────────────────────────────
+    def _sum(field, sub=None):
+        total = 0.0
+        for p in periods:
+            val = p['g3b'] if sub is None else p['g3b'].get(field, {})
+            v = val.get(sub, 0) if sub else val.get(field, 0)
+            total += float(v or 0)
+        return round(total, 2)
 
-    # Zero-rated turnover (Export WOP from GSTR-1)
-    zero_rated = _fmt_number(
-        g1.get('exp_wop_value', 0) + g1.get('exp_wp_value', 0) +
-        g1.get('sez_wop_value', 0) + g1.get('sez_wp_value', 0) +
-        g1.get('deemed_export_value', 0))
+    def _sum_g1(field):
+        return round(sum(float(p['g1'].get(field, 0) or 0) for p in periods), 2)
 
-    # Adjusted total turnover = zero rated + domestic
-    domestic = _fmt_number(
-        g3b.get('outward_taxable', {}).get('taxable', 0) +
-        g3b.get('outward_nil_exempted', {}).get('taxable', 0))
-    adj_turnover = _fmt_number(zero_rated + domestic)
+    # Aggregate net ITC (GSTR-3B)
+    net_igst = round(sum(float(p['g3b'].get('net_itc',{}).get('igst',0)) for p in periods), 2)
+    net_cgst = round(sum(float(p['g3b'].get('net_itc',{}).get('cgst',0)) for p in periods), 2)
+    net_sgst = round(sum(float(p['g3b'].get('net_itc',{}).get('sgst',0)) for p in periods), 2)
+    net_cess = round(sum(float(p['g3b'].get('net_itc',{}).get('cess',0)) for p in periods), 2)
+    net_itc_total = round(net_igst + net_cgst + net_sgst + net_cess, 2)
+
+    # Aggregate zero-rated turnover
+    zero_rated = round(
+        _sum_g1('exp_wop_value') + _sum_g1('exp_wp_value') +
+        _sum_g1('sez_wop_value') + _sum_g1('sez_wp_value') +
+        _sum_g1('deemed_export_value'), 2)
+
+    # Aggregate domestic + nil
+    domestic = round(
+        sum(float(p['g3b'].get('outward_taxable',{}).get('taxable',0)) for p in periods) +
+        sum(float(p['g3b'].get('outward_nil_exempted',{}).get('taxable',0)) for p in periods),
+        2)
+    adj_turnover = round(zero_rated + domestic, 2)
+
+    # Period range label
+    first_label = periods[0]['label']
+    last_label  = periods[-1]['label']
+    period_range_label = first_label if first_label == last_label \
+                         else f"{first_label} to {last_label}"
+
+    # Use first available GSTIN/name
+    if not gstin:
+        for p in periods:
+            gstin = p['g3b'].get('gstin') or p['g2b'].get('gstin') or ''
+            if gstin: break
+    if not name:
+        for p in periods:
+            name = p['g3b'].get('name') or p['g2b'].get('name') or ''
+            if name: break
+
+    # Inject GSTIN/name into first period's g3b for the summary sheets
+    _ref_g3b = dict(periods[0]['g3b'])
+    _ref_g3b.update({'gstin': gstin, 'name': name})
+    _ref_g1  = periods[0]['g1']
+    _ref_g2b = dict(periods[0]['g2b'])
+    _ref_g2b.update({'gstin': gstin, 'name': name})
 
     # ── Workbook ──────────────────────────────────────────────────────────
     wb = Workbook()
-    # Remove default sheet
     wb.remove(wb.active)
 
-    ws_post   = wb.create_sheet("Post Audit Sheet")
-    ws_main   = wb.create_sheet("MAIN CALCULATION SHEET")
-    ws_turn   = wb.create_sheet("Turnover Sheet")
-    ws_itc    = wb.create_sheet("ITC Sheet")
+    ws_post = wb.create_sheet("Post Audit Sheet")
+    ws_main = wb.create_sheet("MAIN CALCULATION SHEET")
+    ws_turn = wb.create_sheet("Turnover Sheet")
+    ws_itc  = wb.create_sheet("ITC Sheet")
 
-    _build_post_audit(ws_post,  g3b, g1, g2b, period_label, net_itc_total, zero_rated, adj_turnover)
-    _build_main_calc( ws_main,  g3b, g1, g2b, period_label, net_itc_total, zero_rated, adj_turnover)
-    _build_turnover(  ws_turn,  g3b, g1, period_label)
-    _build_itc(       ws_itc,   g3b, g2b, period_label)
+    _build_post_audit(ws_post, _ref_g3b, _ref_g1, _ref_g2b,
+                      period_range_label, net_itc_total, zero_rated, adj_turnover)
+    _build_main_calc( ws_main, _ref_g3b, _ref_g1, _ref_g2b,
+                      period_range_label, net_itc_total, zero_rated, adj_turnover)
+    _build_turnover(  ws_turn, periods)
+    _build_itc(       ws_itc,  periods)
 
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
     return buf.read()
+

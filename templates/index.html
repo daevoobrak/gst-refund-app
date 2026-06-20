@@ -11,6 +11,403 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f0f4f8;
       min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      padding: 36px 40px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    h1 { font-size: 1.45rem; color: #1a3a5c; margin-bottom: 4px; }
+    .subtitle { color: #6b7e93; font-size: 0.88rem; margin-bottom: 28px; }
+
+    /* Section */
+    .section {
+      border: 1px solid #dce6f0;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #f7fafd;
+      border-bottom: 1px solid #dce6f0;
+    }
+    .section-header .icon { font-size: 1.3rem; }
+    .section-header .title { font-weight: 700; font-size: 0.9rem; color: #1a3a5c; flex: 1; }
+    .section-header .hint  { font-size: 0.75rem; color: #7a8fa6; }
+
+    .badge {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 7px;
+      border-radius: 20px; letter-spacing: 0.02em;
+    }
+    .badge-xlsx { background: #e8f5e9; color: #2e7d32; }
+    .badge-pdf  { background: #fce4ec; color: #c62828; }
+    .badge-count {
+      background: #1565c0; color: #fff;
+      font-size: 0.7rem; padding: 1px 7px; border-radius: 20px;
+      min-width: 20px; text-align: center;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      position: relative;
+      border: 2px dashed #b0c4d8;
+      margin: 14px;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      background: #fafdff;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: #1976d2; background: #e3f2fd;
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+    }
+    .drop-zone .dz-icon { font-size: 1.6rem; }
+    .drop-zone .dz-text { font-size: 0.82rem; color: #546e7a; margin-top: 4px; }
+
+    /* File list */
+    .file-list {
+      margin: 0 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      background: #f0f7ff;
+      border: 1px solid #c8dff5;
+      border-radius: 6px;
+      font-size: 0.82rem;
+    }
+    .file-item .fi-icon { font-size: 1rem; flex-shrink: 0; }
+    .file-item .fi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #1a3a5c; font-weight: 500; }
+    .file-item .fi-period {
+      font-size: 0.72rem; font-weight: 700; padding: 2px 6px;
+      border-radius: 10px; background: #1565c0; color: #fff; flex-shrink: 0;
+    }
+    .file-item .fi-remove {
+      background: none; border: none; cursor: pointer; color: #b0bec5;
+      font-size: 1rem; line-height: 1; padding: 0 2px; flex-shrink: 0;
+    }
+    .file-item .fi-remove:hover { color: #c62828; }
+
+    /* Period summary */
+    .period-summary {
+      margin: 0 14px 14px;
+      padding: 8px 12px;
+      background: #e8f5e9;
+      border: 1px solid #a5d6a7;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      color: #2e7d32;
+      display: none;
+    }
+    .period-summary.show { display: block; }
+
+    /* Buttons */
+    .btn {
+      display: block; width: 100%; padding: 14px;
+      background: #1565c0; color: #fff;
+      font-size: 1rem; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer;
+      margin-top: 24px; transition: background .2s;
+    }
+    .btn:hover { background: #0d47a1; }
+    .btn:disabled { background: #90a4ae; cursor: not-allowed; }
+
+    #status {
+      margin-top: 14px; padding: 12px 16px;
+      border-radius: 8px; font-size: 0.88rem; display: none;
+    }
+    #status.info    { background: #e3f2fd; color: #1565c0; display: block; }
+    #status.success { background: #e8f5e9; color: #2e7d32; display: block; }
+    #status.error   { background: #fce4ec; color: #b71c1c; display: block; }
+    #status.warning { background: #fff8e1; color: #e65100; display: block; }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.5); border-top-color: #fff;
+      border-radius: 50%; animation: spin .7s linear infinite;
+      margin-right: 8px; vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🧾 GST Refund Working Generator</h1>
+    <p class="subtitle">Upload files for one or multiple months. The app matches files by period and generates a consolidated Refund Working Excel.</p>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+
+      <!-- GSTR-2B -->
+      <div class="section">
+        <div class="section-header">
+          <span class="icon">📊</span>
+          <span class="title">GSTR-2B &nbsp;<span class="badge badge-xlsx">XLSX</span></span>
+          <span class="hint">File name: <b>MMYYYY_…xlsx</b> &nbsp;(e.g. 012025_…xlsx)</span>
+          <span class="badge-count" id="cnt-gstr2b">0</span>
+        </div>
+        <div class="drop-zone" id="dz-gstr2b">
+          <input type="file" name="gstr2b[]" id="inp-gstr2b" accept=".xlsx,.xls" multiple />
+          <div class="dz-icon">📂</div>
+          <div class="dz-text">Click or drag &amp; drop — select multiple files at once</div>
+        </div>
+        <div class="file-list" id="fl-gstr2b"></div>
+        <div class="period-summary" id="ps-gstr2b"></div>
+      </div>
+
+      <!-- GSTR-1 -->
+      <div class="section">
+        <div class="section-header">
+          <span class="icon">📄</span>
+          <span class="title">GSTR-1 PDFs &nbsp;<span class="badge badge-pdf">PDF</span></span>
+          <span class="hint">One PDF per month</span>
+          <span class="badge-count" id="cnt-gstr1">0</span>
+        </div>
+        <div class="drop-zone" id="dz-gstr1">
+          <input type="file" name="gstr1[]" id="inp-gstr1" accept=".pdf" multiple />
+          <div class="dz-icon">📂</div>
+          <div class="dz-text">Click or drag &amp; drop — select multiple files at once</div>
+        </div>
+        <div class="file-list" id="fl-gstr1"></div>
+      </div>
+
+      <!-- GSTR-3B -->
+      <div class="section">
+        <div class="section-header">
+          <span class="icon">📄</span>
+          <span class="title">GSTR-3B PDFs &nbsp;<span class="badge badge-pdf">PDF</span></span>
+          <span class="hint">One PDF per month</span>
+          <span class="badge-count" id="cnt-gstr3b">0</span>
+        </div>
+        <div class="drop-zone" id="dz-gstr3b">
+          <input type="file" name="gstr3b[]" id="inp-gstr3b" accept=".pdf" multiple />
+          <div class="dz-icon">📂</div>
+          <div class="dz-text">Click or drag &amp; drop — select multiple files at once</div>
+        </div>
+        <div class="file-list" id="fl-gstr3b"></div>
+      </div>
+
+      <button class="btn" type="submit" id="submitBtn">Generate Refund Working Excel</button>
+    </form>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+  // ── File store (per section) ───────────────────────────────────────────────
+  const store = { gstr2b: [], gstr1: [], gstr3b: [] };
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
+                  'Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Detect period from GSTR-2B filename: MMYYYY_…
+  function periodFromG2bFilename(name) {
+    const m = name.match(/^(\d{2})(\d{4})[_\-.]/);
+    if (!m) return '';
+    const mo = parseInt(m[1]), yr = parseInt(m[2]);
+    if (mo < 1 || mo > 12) return '';
+    return MONTHS[mo-1] + '-' + String(yr).slice(2);
+  }
+
+  // ── Render file list ────────────────────────────────────────────────────────
+  function renderList(section) {
+    const fl   = document.getElementById('fl-' + section);
+    const cnt  = document.getElementById('cnt-' + section);
+    const ps   = document.getElementById('ps-' + section);
+    const files = store[section];
+
+    fl.innerHTML = '';
+    cnt.textContent = files.length;
+
+    files.forEach((f, idx) => {
+      const period = section === 'gstr2b' ? periodFromG2bFilename(f.name) : '';
+      const item = document.createElement('div');
+      item.className = 'file-item';
+      item.innerHTML = `
+        <span class="fi-icon">${section === 'gstr2b' ? '📊' : '📄'}</span>
+        <span class="fi-name" title="${f.name}">${f.name}</span>
+        ${period ? `<span class="fi-period">${period}</span>` : ''}
+        <button type="button" class="fi-remove" data-idx="${idx}" title="Remove">✕</button>
+      `;
+      fl.appendChild(item);
+    });
+
+    // Remove button handlers
+    fl.querySelectorAll('.fi-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        store[section].splice(parseInt(btn.dataset.idx), 1);
+        syncInput(section);
+        renderList(section);
+        updateSummary();
+      });
+    });
+
+    // Period summary for GSTR-2B
+    if (ps) {
+      const labels = files
+        .map(f => periodFromG2bFilename(f.name))
+        .filter(Boolean);
+      if (labels.length) {
+        ps.textContent = `Detected periods: ${labels.join(', ')}`;
+        ps.classList.add('show');
+      } else {
+        ps.classList.remove('show');
+      }
+    }
+  }
+
+  // ── Sync JS store back to the hidden <input> via DataTransfer ──────────────
+  function syncInput(section) {
+    const inp = document.getElementById('inp-' + section);
+    try {
+      const dt = new DataTransfer();
+      store[section].forEach(f => dt.items.add(f));
+      inp.files = dt.files;
+    } catch(e) {
+      // Safari fallback – we pass files directly via FormData below
+    }
+  }
+
+  // ── Handle new files added via input ──────────────────────────────────────
+  function addFiles(section, newFiles) {
+    const existingNames = new Set(store[section].map(f => f.name));
+    Array.from(newFiles).forEach(f => {
+      if (!existingNames.has(f.name)) {
+        store[section].push(f);
+        existingNames.add(f.name);
+      }
+    });
+    syncInput(section);
+    renderList(section);
+    updateSummary();
+  }
+
+  // ── Wire up each section ───────────────────────────────────────────────────
+  ['gstr2b', 'gstr1', 'gstr3b'].forEach(sec => {
+    const inp = document.getElementById('inp-' + sec);
+    const dz  = document.getElementById('dz-'  + sec);
+
+    inp.addEventListener('change', () => {
+      addFiles(sec, inp.files);
+      inp.value = ''; // reset so same file can be added again if re-selected
+    });
+
+    dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('dragover');
+      addFiles(sec, e.dataTransfer.files);
+    });
+  });
+
+  // ── Update overall status message ─────────────────────────────────────────
+  function updateSummary() {
+    const total = store.gstr2b.length + store.gstr1.length + store.gstr3b.length;
+    const btn = document.getElementById('submitBtn');
+    btn.textContent = total
+      ? `Generate Refund Working Excel  (${total} file${total>1?'s':''})`
+      : 'Generate Refund Working Excel';
+  }
+
+  // ── Form submit ────────────────────────────────────────────────────────────
+  const form   = document.getElementById('uploadForm');
+  const btn    = document.getElementById('submitBtn');
+  const status = document.getElementById('status');
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    if (!store.gstr2b.length || !store.gstr1.length || !store.gstr3b.length) {
+      status.className = 'error';
+      status.textContent = '❌ Please upload at least one file for each section.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Processing…';
+    status.className = 'info';
+    status.textContent = `Parsing ${store.gstr2b.length + store.gstr1.length + store.gstr3b.length} files and generating Excel…`;
+
+    try {
+      const fd = new FormData();
+      store.gstr2b.forEach(f => fd.append('gstr2b[]', f));
+      store.gstr1.forEach(f  => fd.append('gstr1[]',  f));
+      store.gstr3b.forEach(f => fd.append('gstr3b[]', f));
+
+      const resp = await fetch('/process', { method: 'POST', body: fd });
+
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const cd   = resp.headers.get('Content-Disposition') || '';
+        const fnM  = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        const fname = fnM ? fnM[1].replace(/['"]/g,'') : 'Refund_Working.xlsx';
+
+        const url = URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href = url; a.download = fname; a.click();
+        URL.revokeObjectURL(url);
+
+        const periods  = resp.headers.get('X-Periods')  || '';
+        const warnings = resp.headers.get('X-Warnings') || '';
+        const pLabel   = periods ? ` — Periods: ${periods}` : '';
+
+        if (warnings) {
+          status.className = 'warning';
+          status.textContent = `⚠️ Download started${pLabel}. Warnings: ${warnings}`;
+        } else {
+          status.className = 'success';
+          status.textContent = `✅ Download started: ${fname}${pLabel}`;
+        }
+      } else {
+        const data = await resp.json();
+        const detail = data.details ? '\n' + data.details.join('\n') : '';
+        status.className = 'error';
+        status.textContent = `❌ ${data.error || 'Unknown error'}${detail}`;
+        if (data.trace) console.error(data.trace);
+      }
+    } catch(err) {
+      status.className = 'error';
+      status.textContent = '❌ Network error: ' + err.message;
+    } finally {
+      btn.disabled = false;
+      updateSummary();
+    }
+  });
+  </script>
+</body>
+</html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GST Refund Working Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
